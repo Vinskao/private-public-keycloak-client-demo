@@ -1,0 +1,35 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem
+          jwk-set-uri: https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/certs
+  # Database configuration removed
+
+keycloak:
+  auth-server-url: https://peoplesystem.tatdvsonorth.com/sso/auth
+  realm: PeopleSystem
+  resource: test-private # Ensure this matches your Keycloak client's `client_id`
+  public-client: false
+  cors: true
+  credentials:
+    secret: axMsoGFAXmMXOfx7CnHn776nyZl2hzsX
+
+  bearer-only: true
+  security-constraints:
+    - authRoles: default-roles-peoplesystem
+      securityCollections:
+        - patterns:
+            - /* # The paths requiring admin access
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html

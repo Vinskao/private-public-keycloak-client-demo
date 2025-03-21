@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+    .login-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .login-button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .login-button:hover {
+      background-color: #3367d6;
+    }
+    .logout-button {
+      background-color: #ea4335;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 20px;
+    }
+    .logout-button:hover {
+      background-color: #d33426;
+    }
+    .session-notice {
+      color: #757575;
+      font-size: 12px;
+      margin-top: 15px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>歡迎</h1>
+    <p>請點擊下方按鈕進行登入</p>
+    <button class="login-button" id="loginButton">登入系統</button>
+    <div id="userInfo" style="margin-top: 20px; display: none;">
+      <h2>登入成功</h2>
+      <p id="username"></p>
+      <p id="email"></p>
+      <p class="session-notice">注意：為了安全考慮，此登錄會話短暫有效</p>
+      <button class="logout-button" id="logoutButton">登出系統</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const clientId = "test-private";
+      const redirectUri = "http://localhost:8080/keycloak/redirect";
+      let currentRefreshToken = '';
+      
+      // 檢查 URL 中是否有登入成功的參數
+      const urlParams = new URLSearchParams(window.location.search);
+      const username = urlParams.get('username');
+      const email = urlParams.get('email');
+      const token = urlParams.get('token');
+      const refreshToken = getCookie('refreshToken');
+      
+      // 如果有登入參數，顯示用戶信息
+      if (username && email && token) {
+        document.getElementById('loginButton').style.display = 'none';
+        document.getElementById('userInfo').style.display = 'block';
+        document.getElementById('username').textContent = `用戶名: ${username}`;
+        document.getElementById('email').textContent = `郵箱: ${email}`;
+        currentRefreshToken = refreshToken;
+        
+        // 清除 URL 參數但不刷新頁面
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // 設置60秒後自動登出（配合後端session設置）
+        setTimeout(function() {
+          // 顯示過期通知
+          alert('登入會話已過期，請重新登入');
+          window.location.reload();
+        }, 60000); // 60秒後自動登出
+      }
+      
+      // 登入按鈕點擊事件
+      document.getElementById('loginButton').addEventListener('click', function() {
+        const authorizationUrl = `https://peoplesystem.tatdvsonorth.com/sso/realms/PeopleSystem/protocol/openid-connect/auth?response_type=code&scope=openid&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        window.location.href = authorizationUrl;
+      });
+      
+      // 登出按鈕點擊事件
+      document.getElementById('logoutButton').addEventListener('click', function() {
+        // 清除本地 cookie
+        document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "authorizationCode=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // 刷新頁面即可，因為後端已經使session過期
+        window.location.reload();
+      });
+      
+      // 獲取 cookie 輔助函數
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+    });
+  </script>
+</body>
+</html>
